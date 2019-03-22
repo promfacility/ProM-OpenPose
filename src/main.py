@@ -14,16 +14,18 @@ except ImportError as e:
     raise e
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('../config.ini')
 
 params = dict()
-params["model_folder"] = "/home/nvidia/openpose/models/"
-params["window_name"] = config['general']['window_name']
-params["width"] = int(config['general']['width'])
-params["height"] = int(config['general']['height'])
+params["model_folder"] = config['general']['model_folder']
+
+WINDOW_NAME = config['general']['window_name']
+WIDTH = int(config['general']['width'])
+HEIGHT = int(config['general']['height'])
 
 
-def open_cam_onboard(width, height):
+
+def open_cam_onboard(WIDTH, HEIGHT):
     # On versions of L4T prior to 28.1, add 'flip-method=2' into gst_str
     gst_str = ('nvcamerasrc ! '
                'video/x-raw(memory:NVMM), '
@@ -32,7 +34,7 @@ def open_cam_onboard(width, height):
                'nvvidconv ! '
                'video/x-raw, width=(int){}, height=(int){}, '
                'format=(string)BGRx ! '
-               'videoconvert ! appsink').format(width, height)
+               'videoconvert ! appsink').format(WIDTH, HEIGHT)
     return cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
 
 
@@ -46,7 +48,7 @@ opWrapper.configure(params)
 opWrapper.start()
 
 # Videocapture
-streamer = open_cam_onboard(params["width"], params["height"])
+streamer = open_cam_onboard(WIDTH, HEIGHT)
 
 while True:
     _, imageToProcess = streamer.read()  # grab the next image frame from camera
@@ -56,7 +58,7 @@ while True:
     opWrapper.emplaceAndPop([datum])
 
     # Display Image
-    cv2.imshow(params["window_name"], datum.cvOutputData)
+    cv2.imshow(WINDOW_NAME, datum.cvOutputData)
     key = cv2.waitKey(10)
     if key == 27:  # Check for ESC key
         cv2.destroyAllWindows()
